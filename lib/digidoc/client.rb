@@ -290,7 +290,16 @@ module Digidoc
       respond_with_hash_or_nested(result)
     end
     
-    # Creates savon client
+    private 
+
+    def soap_fault?(response)
+      response.http.body =~ /<*Fault>/
+    end
+    
+    def ensure_area_code(phone)
+      phone =~ /^\+/ ? phone : "+372#{phone}" unless phone.blank?
+    end
+
     def savon_client
       Savon::Client.new do |wsdl, http|
         wsdl.endpoint = self.endpoint_url
@@ -299,16 +308,6 @@ module Digidoc
         http.auth.ssl.verify_mode = :none # todo: add env dependency
       end
     end
-    
-    def soap_fault?(response)
-      response.http.body =~ /<*Fault>/
-    end
-    
-    def ensure_area_code(phone)
-      phone =~ /^\+/ ? phone : "+372#{phone}" unless phone.blank?
-    end
-    
-    private 
     
     def datafile(filename, mime_type, size, content, id)
       datafile = "<DataFile ContentType=\"EMBEDDED_BASE64\" Filename=\"#{filename}\" Id=\"D#{id}\" MimeType=\"#{mime_type}\" Size=\"#{size}\">#{content}</DataFile>"

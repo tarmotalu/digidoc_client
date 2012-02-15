@@ -41,6 +41,7 @@ Add gem dependency in your `Gemfile` and install the gem:
 ## Digidoc specifications
 
 [In English](http://www.sk.ee/upload/files/DigiDocService_spec_eng.pdf)
+
 [In Estonian](http://www.sk.ee/upload/files/DigiDocService_spec_est.pdf)
 
 ## Authors

@@ -7,35 +7,6 @@ require 'mime/types'
 require 'digest/sha1'
 require 'nokogiri'
 
-# Module for Estonian DigiDoc service authentication and signing API implementations.
-#
-# Authentication example:
-#
-#   client = Digidoc::Client.new
-#   client.authenticate(:phone => '+3725012345', :message_to_display => 'Teenuste autentimine', :service_name => 'Testimine')
-#   client.authentication_status
-#
-# Sign example:
-#
-#   c = Digidoc::Client.new
-#   c.start_session
-#   c.create_signed_doc 
-#   c.signed_doc_info
-#
-#   file1 = File.open(Rails.root.join('tmp', 'file1.pdf'))
-#   c.add_datafile(file1)
-#   file2 = File.open(Rails.root.join('tmp', 'file2.pdf'))
-#   c.add_datafile(file2)
-# 
-#   c.mobile_sign(:phone => '5012345', :role => ' My Company LLC / CTO')
-#   c.sign_status
-# 
-#   c.save_signed_doc do |content|
-#     File.open(Rails.root.join('tmp', 'signed_document.ddoc'), 'w') {|f| f.write(content) }
-#   end
-#
-#   c.close_session
-#
 module Digidoc
   TargetNamespace = 'http://www.sk.ee/DigiDocService/DigiDocService_2_3.wsdl' 
   TestEndpointUrl = 'https://openxades.org:8443/DigiDocService'

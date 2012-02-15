@@ -7,7 +7,7 @@ Gem::Specification.new do |s|
   s.version     = Digidoc::VERSION
   s.authors     = ["Tarmo Talu"]
   s.email       = ["tarmo.talu@gmail.com"]
-  s.homepage    = "http://github.com/tarmotalu"
+  s.homepage    = "http://github.com/tarmotalu/digidoc_client"
   s.summary     = %q{Ruby library to interact with Estonian DigiDoc services.}
   s.description = %q{An easy way to interact with Estonian DigiDoc services.}
 
@@ -18,8 +18,6 @@ Gem::Specification.new do |s|
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ["lib"]
 
-  # specify any dependencies here; for example:
-  #s.add_development_dependency "rspec"
   s.add_dependency 'httpclient', '>= 2.2.4'
   s.add_dependency 'savon', '>= 0.9.7'
   s.add_dependency 'mime-types', '>= 1.16'

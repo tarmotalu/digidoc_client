@@ -4,7 +4,7 @@ require "digidoc/version"
 
 Gem::Specification.new do |s|
   s.name        = "digidoc_client"
-  s.version     = DigidocClient::VERSION
+  s.version     = Digidoc::VERSION
   s.authors     = ["Tarmo Talu"]
   s.email       = ["tarmo.talu@gmail.com"]
   s.homepage    = "http://github.com/tarmotalu"
@@ -19,6 +19,10 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
 
   # specify any dependencies here; for example:
-  # s.add_development_dependency "rspec"
-  s.add_runtime_dependency "rest-client"
+  #s.add_development_dependency "rspec"
+  s.add_dependency 'httpclient', '>= 2.2.4'
+  s.add_dependency 'savon', '>= 0.9.7'
+  s.add_dependency 'mime-types', '>= 1.16'
+  s.add_dependency 'crack', '>= 0.1.8'
+  s.add_dependency 'nokogiri', '>= 1.4.0'
 end

@@ -1,7 +1,6 @@
 require 'ostruct'
 require 'httpclient'
 require 'savon'
-require 'builder'
 require 'cgi'
 require 'crack/xml'
 require 'mime/types'

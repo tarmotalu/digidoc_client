@@ -19,28 +19,29 @@ Add gem dependency in your `Gemfile` and install the gem:
 
 ### Signing
 
-    c = Digidoc::Client.new
-    c.start_session
-    c.create_signed_doc 
-    c.signed_doc_info
+    client = Digidoc::Client.new
+    client.start_session
+    client.create_signed_doc 
+    client.signed_doc_info
     
     file1 = File.open('file1.pdf')
-    c.add_datafile(file1)
+    client.add_datafile(file1)
     file2 = File.open('file2.pdf')
-    c.add_datafile(file2)
+    client.add_datafile(file2)
     
-    c.mobile_sign(:phone => '5012345', :role => ' My Company LLC / CTO')
-    c.sign_status
+    client.mobile_sign(:phone => '5012345', :role => ' My Company LLC / CTO')
+    client.sign_status
     
-    c.save_signed_doc do |content|
+    client.save_signed_doc do |content|
       File.open('signed_document.ddoc', 'w') { |f| f.write(content) }
     end
     
-    c.close_session
+    client.close_session
 
 ## Digidoc specifications
 
-TODO: add links to digidoc specifications
+[In English](http://www.sk.ee/upload/files/DigiDocService_spec_eng.pdf)
+[In Estonian](http://www.sk.ee/upload/files/DigiDocService_spec_est.pdf)
 
 ## Authors
 

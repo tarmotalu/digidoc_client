@@ -18,9 +18,14 @@ Gem::Specification.new do |s|
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ["lib"]
 
-  s.add_dependency 'httpclient', '>= 2.2.4'
-  s.add_dependency 'savon', '>= 0.9.7'
+  s.add_dependency 'httpclient', '>= 2.3.4'
+  s.add_dependency 'savon', '>= 2.4.0'
   s.add_dependency 'mime-types', '>= 1.16'
   s.add_dependency 'crack', '>= 0.1.8'
   s.add_dependency 'nokogiri', '>= 1.4.0'
+  s.add_development_dependency "rspec"
+  s.add_development_dependency "guard"
+  s.add_development_dependency "guard-rspec"
+  s.add_development_dependency "growl"
+  s.add_development_dependency "rb-fsevent"
 end

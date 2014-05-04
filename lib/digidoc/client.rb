@@ -7,11 +7,24 @@ require 'mime/types'
 require 'digest/sha1'
 require 'nokogiri'
 
+class NestedOpenStruct < OpenStruct
+  def initialize(hash = nil)
+    @table = {}
+    if hash
+      for k, v in hash
+        @table[k.to_sym] = v.instance_of?(Hash) ? NestedOpenStruct.new(v) : v
+        new_ostruct_member(k)
+      end
+    end
+  end
+end
+
 module Digidoc
   TargetNamespace = 'http://www.sk.ee/DigiDocService/DigiDocService_2_3.wsdl'
-  TestEndpointUrl = 'https://openxades.org:8443/DigiDocService'
+  TestEndpointUrl = 'https://openxades.org:9443/DigiDocService'
 
   class Client
+    cattr_accessor :logger
     attr_accessor :session_code, :endpoint_url, :respond_with_nested_struct, :embedded_datafiles
 
     def initialize(endpoint_url = TestEndpointUrl)
@@ -41,11 +54,11 @@ module Digidoc
       self.session_code = nil
 
       # Make webservice call
-      response = savon_client.request(:wsdl, 'MobileAuthenticate') do |soap|
-        soap.body = {'CountryCode' => country_code, 'PhoneNo' => phone, 'Language' => language, 'ServiceName' => service_name,
+      response = savon_client.call('MobileAuthenticate') do |locals|
+        locals.message 'CountryCode' => country_code, 'PhoneNo' => phone, 'Language' => language, 'ServiceName' => service_name,
           'MessageToDisplay' => message_to_display, 'SPChallenge' => sp_challenge, 'MessagingMode' => messaging_mode,
           'AsyncConfiguration' => async_configuration, 'ReturnCertData' => return_cert_data,
-          'ReturnRevocationData' => return_revocation_data, 'IdCode' => personal_code }
+          'ReturnRevocationData' => return_revocation_data, 'IdCode' => personal_code
       end
 
       if soap_fault?(response)
@@ -59,8 +72,8 @@ module Digidoc
 
     # Authentication status
     def authentication_status(session_code = self.session_code)
-      response = savon_client.request(:wsdl, 'GetMobileAuthenticateStatus') do |soap|
-        soap.body = {'Sesscode' => session_code }
+      response = savon_client.call('GetMobileAuthenticateStatus') do |locals|
+        locals.message 'Sesscode' => session_code
       end
 
       result = soap_fault?(response) ? response.to_hash[:fault] : response.to_hash[:get_mobile_authenticate_status_response]
@@ -75,8 +88,8 @@ module Digidoc
       signed_doc_file = options.delete(:signed_doc_file)
       signed_doc_xml = signed_doc_file.read if signed_doc_file
 
-      response = savon_client.request(:wsdl, 'StartSession') do |soap|
-        soap.body = { 'bHoldSession' => true, 'SigDocXML' => signed_doc_xml}
+      response = savon_client.call('StartSession') do |locals|
+        locals.message 'bHoldSession' => true, 'SigDocXML' => signed_doc_xml
       end
 
       if soap_fault?(response)
@@ -95,8 +108,8 @@ module Digidoc
       session_code = options.delete(:session_code) || self.session_code
       version = options.delete(:version) || '1.3'
 
-      response = savon_client.request(:wsdl, 'CreateSignedDoc') do |soap|
-        soap.body = {'Sesscode' => session_code, 'Format' => 'DIGIDOC-XML', 'Version' => version}
+      response = savon_client.call('CreateSignedDoc') do |locals|
+        locals.message 'Sesscode' => session_code, 'Format' => 'DIGIDOC-XML', 'Version' => version
       end
 
       result = soap_fault?(response) ? response.to_hash[:fault] : response.to_hash[:create_signed_doc_response]
@@ -116,10 +129,10 @@ module Digidoc
       city = options.delete(:city)
       postal_code = options.delete(:postal_code)
 
-      response = savon_client.request(:wsdl, 'PrepareSignature') do |soap|
-        soap.body = {'Sesscode' => session_code, 'SignersCertificate' => signers_certificate,
+      response = savon_client.call('PrepareSignature') do |locals|
+        locals.message 'Sesscode' => session_code, 'SignersCertificate' => signers_certificate,
           'SignersTokenId' => signers_token_id, 'Role' => role, 'City' => city,
-          'State' => state_or_province, 'PostalCode' => postal_code, 'Country' => country_name, 'SigningProfile' => signing_profile }
+          'State' => state_or_province, 'PostalCode' => postal_code, 'Country' => country_name, 'SigningProfile' => signing_profile
       end
 
       result = soap_fault?(response) ? response.to_hash[:fault] : response.to_hash[:prepare_signature_response]
@@ -133,8 +146,8 @@ module Digidoc
       signature = options.delete(:signature)
       signature_id = options.delete(:signature_id)
 
-      response = savon_client.request(:wsdl, 'FinalizeSignature') do |soap|
-        soap.body = {'Sesscode' => session_code, 'SignatureValue' => signature, 'SignatureId' => signature_id}
+      response = savon_client.call('FinalizeSignature') do |locals|
+        locals.message 'Sesscode' => session_code, 'SignatureValue' => signature, 'SignatureId' => signature_id
       end
 
       result = soap_fault?(response) ? response.to_hash[:fault] : response.to_hash[:finalize_signature_response]
@@ -147,8 +160,8 @@ module Digidoc
       session_code = options.delete(:session_code) || self.session_code
       signature_id = options.delete(:signature_id)
 
-      response = savon_client.request(:wsdl, 'GetNotary') do |soap|
-        soap.body = {'Sesscode' => session_code, 'SignatureId' => signature_id}
+      response = savon_client.call('GetNotary') do |locals|
+        locals.message 'Sesscode' => session_code, 'SignatureId' => signature_id
       end
 
       result = soap_fault?(response) ? response.to_hash[:fault] : response.to_hash[:get_notary_response]
@@ -177,13 +190,13 @@ module Digidoc
       postal_code = options.delete(:postal_code)
       phone = ensure_area_code(phone)
 
-      response = savon_client.request(:wsdl, 'MobileSign') do |soap|
-        soap.body = {'Sesscode' => session_code, 'SignersCountry' => country_code, 'CountryName' => country_name,
+      response = savon_client.call('MobileSign') do |locals|
+        locals.message 'Sesscode' => session_code, 'SignersCountry' => country_code, 'CountryName' => country_name,
           'SignerPhoneNo' => phone, 'Language' => language, 'ServiceName' => service_name,
           'AdditionalDataToBeDisplayed' => message_to_display, 'MessagingMode' => messaging_mode,
           'AsyncConfiguration' => async_configuration, 'ReturnDocInfo' => return_doc_info,
           'ReturnDocData' => return_doc_data, 'SignerIDCode' => personal_code, 'Role' => role, 'City' => city,
-           'StateOrProvince' => state_or_province, 'PostalCode' => postal_code }
+           'StateOrProvince' => state_or_province, 'PostalCode' => postal_code
       end
 
       result = soap_fault?(response) ? response.to_hash[:fault] : response.to_hash[:mobile_sign_response]
@@ -198,8 +211,8 @@ module Digidoc
       return_doc_info = options.key?(:return_doc_info) ? options.delete(:return_doc_info) : false
       wait_signature = options.key?(:wait_signature) ? options.delete(:wait_signature) : false
 
-      response = savon_client.request(:wsdl, 'GetStatusInfo') do |soap|
-        soap.body = {'Sesscode' => session_code, 'ReturnDocInfo' => return_doc_info, 'WaitSignature' => wait_signature}
+      response = savon_client.call('GetStatusInfo') do |locals|
+        locals.message 'Sesscode' => session_code, 'ReturnDocInfo' => return_doc_info, 'WaitSignature' => wait_signature
       end
 
       result = soap_fault?(response) ? response.to_hash[:fault] : response.to_hash[:get_status_info_response]
@@ -211,9 +224,10 @@ module Digidoc
       options = args.last || {}
       session_code = options.delete(:session_code) || self.session_code
 
-      response = savon_client.request(:wsdl, 'GetSignedDocInfo') do |soap|
-        soap.body = {'Sesscode' => session_code }
+      response = savon_client.call('GetSignedDocInfo') do |locals|
+        locals.message 'Sesscode' => session_code
       end
+
       result = soap_fault?(response) ? response.to_hash[:fault] : response.to_hash[:get_signed_doc_info_response]
       respond_with_hash_or_nested(result)
     end
@@ -223,8 +237,8 @@ module Digidoc
       options = args.last || {}
       session_code = options.delete(:session_code) || self.session_code
 
-      response = savon_client.request(:wsdl, 'GetSignedDoc') do |soap|
-        soap.body = {'Sesscode' => session_code }
+      response = savon_client.call('GetSignedDoc') do |locals|
+        locals.message 'Sesscode' => session_code
       end
 
       if soap_fault?(response)
@@ -250,8 +264,8 @@ module Digidoc
 
     # Closes current session
     def close_session(session_code = self.session_code)
-      response = savon_client.request(:wsdl, 'CloseSession') do |soap|
-        soap.body = {'Sesscode' => session_code }
+      response = savon_client.call('CloseSession') do |locals|
+        locals.message 'Sesscode' => session_code
       end
       self.session_code = nil
 
@@ -269,7 +283,7 @@ module Digidoc
       use_hashcode = false #options.key?(:use_hashcode) || true
       filename = filename.gsub('/', '-')
 
-      response = savon_client.request(:wsdl, 'AddDataFile') do |soap|
+      response = savon_client.call('AddDataFile') do |locals|
         file_content = Base64.encode64(file.read)
         # Upload file to webservice
         if use_hashcode
@@ -278,8 +292,8 @@ module Digidoc
           self.embedded_datafiles << datafile
           hex_sha1 = Digest::SHA1.hexdigest(datafile)
           digest_value = Base64.encode64(hex_sha1.lines.to_a.pack('H*'))
-          soap.body = {'Sesscode' => session_code, 'FileName' => filename, 'MimeType' => mime_type, 'ContentType' => 'HASHCODE',
-            'Size' => file.size, 'DigestType' => 'sha1', 'DigestValue' => digest_value}
+          locals.message 'Sesscode' => session_code, 'FileName' => filename, 'MimeType' => mime_type, 'ContentType' => 'HASHCODE',
+            'Size' => file.size, 'DigestType' => 'sha1', 'DigestValue' => digest_value
         else
           soap.body = {'Sesscode' => session_code, 'FileName' => filename, 'MimeType' => mime_type, 'ContentType' => 'EMBEDDED_BASE64',
             'Size' => file.size, 'Content' => file_content}
@@ -301,12 +315,15 @@ module Digidoc
     end
 
     def savon_client
-      Savon::Client.new do |wsdl, http|
-        wsdl.endpoint = self.endpoint_url
-        wsdl.namespace = TargetNamespace
-        http.open_timeout = 10
-        http.auth.ssl.verify_mode = :none # todo: add env dependency
-      end
+      Savon.client(
+        raise_errors: false,
+        endpoint: self.endpoint_url,
+        namespace: TargetNamespace,
+        open_timeout: 10,
+        ssl_version: :TLSv1,
+        ssl_verify_mode: :none,
+        logger: Client.logger
+      )
     end
 
     def datafile(filename, mime_type, size, content, id)
@@ -328,11 +345,11 @@ module Digidoc
 
     # Hex ID generator
     def generate_unique_hex(codeLength)
-        validChars = ("A".."F").to_a + ("0".."9").to_a
-        length = validChars.size
-        hexCode = ''
-        1.upto(codeLength) { |i| hexCode << validChars[rand(length-1)] }
-        hexCode
+      validChars = ("A".."F").to_a + ("0".."9").to_a
+      length = validChars.size
+      hexCode = ''
+      1.upto(codeLength) { |i| hexCode << validChars[rand(length-1)] }
+      hexCode
     end
 
     # Generates unique challenge code (consumer token that gets scrumbled by gateway)

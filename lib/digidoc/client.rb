@@ -321,7 +321,9 @@ module Digidoc
         open_timeout: 10,
         ssl_version: :TLSv1,
         ssl_verify_mode: :none,
-        logger: Client.logger
+        logger: Client.logger,
+        log_level: :debug,
+        log: true
       )
     end
 

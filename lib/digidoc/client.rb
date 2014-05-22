@@ -295,8 +295,7 @@ module Digidoc
           locals.message 'Sesscode' => session_code, 'FileName' => filename, 'MimeType' => mime_type, 'ContentType' => 'HASHCODE',
             'Size' => file.size, 'DigestType' => 'sha1', 'DigestValue' => digest_value
         else
-          soap.body = {'Sesscode' => session_code, 'FileName' => filename, 'MimeType' => mime_type, 'ContentType' => 'EMBEDDED_BASE64',
-            'Size' => file.size, 'Content' => file_content}
+          locals.message'Sesscode' => session_code, 'FileName' => filename, 'MimeType' => mime_type, 'ContentType' => 'EMBEDDED_BASE64', 'Size' => file.size, 'Content' => file_content
         end
       end
 

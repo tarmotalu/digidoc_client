@@ -6,6 +6,7 @@ require 'crack/xml'
 require 'mime/types'
 require 'digest/sha1'
 require 'nokogiri'
+require 'logger'
 
 class NestedOpenStruct < OpenStruct
   def initialize(hash = nil)
@@ -24,7 +25,7 @@ module Digidoc
   TestEndpointUrl = 'https://openxades.org:9443/DigiDocService'
 
   class Client
-    #attr_accessor :logger
+    attr_accessor :logger
     attr_accessor :session_code, :endpoint_url, :respond_with_nested_struct, :embedded_datafiles
 
     def initialize(endpoint_url = TestEndpointUrl)

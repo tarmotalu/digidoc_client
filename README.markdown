@@ -12,7 +12,7 @@ Add gem dependency in your `Gemfile` and install the gem:
 
     client = Digidoc::Client.new
     client.authenticate(
-      :phone => '+3725012345', :message_to_display => 'Authenticating',
+      :phone => '+37260000007', :message_to_display => 'Authenticating',
       :service_name => 'Testing'
     )
     client.authentication_status
@@ -37,6 +37,9 @@ Add gem dependency in your `Gemfile` and install the gem:
     end
     
     client.close_session
+
+### More test numbers and details
+[In English](http://www.id.ee/?id=36381)
 
 ## Digidoc specifications
 

@@ -31,6 +31,7 @@ module Digidoc
       self.endpoint_url = endpoint_url || TestEndpointUrl
       self.respond_with_nested_struct = true
       self.embedded_datafiles = []
+      #self.logger = Logger.new(STDOUT)
     end
 
     # Authentication message
@@ -325,17 +326,23 @@ module Digidoc
     end
 
     def savon_client
-      Savon.client(
+      options = {
         raise_errors: false,
         endpoint: self.endpoint_url,
         namespace: TargetNamespace,
         open_timeout: 10,
         ssl_version: :TLSv1,
-        ssl_verify_mode: :none,
-        logger: self.logger,
-        log_level: :debug,
-        log: true
-      )
+        ssl_verify_mode: :none
+      }
+
+      if self.logger
+        options.merge!(logger: self.logger,
+          log_level: :debug,
+          log: true
+        )
+      end
+
+      Savon.client(options)
     end
 
     def datafile(filename, mime_type, size, content, id)

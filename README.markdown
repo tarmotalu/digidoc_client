@@ -33,7 +33,7 @@ Add gem dependency in your `Gemfile` and install the gem:
     client.mobile_sign(:phone => '+37260000007', :role => ' My Company LLC / CTO')
     client.sign_status
 
-    #
+    # Check signature status here...
 
     client.save_signed_doc do |content, format|
       File.open("signed_document.#{format}", 'w') do |f|

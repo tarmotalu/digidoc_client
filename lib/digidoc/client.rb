@@ -25,8 +25,7 @@ module Digidoc
   TestEndpointUrl = 'https://openxades.org:9443/DigiDocService'
 
   class Client
-    attr_accessor :logger
-    attr_accessor :session_code, :endpoint_url, :respond_with_nested_struct, :embedded_datafiles
+    attr_accessor :logger, :session_code, :endpoint_url, :respond_with_nested_struct, :embedded_datafiles
 
     def initialize(endpoint_url = TestEndpointUrl)
       self.endpoint_url = endpoint_url || TestEndpointUrl
@@ -85,9 +84,11 @@ module Digidoc
     def start_session(*args)
       self.session_code = nil
       self.embedded_datafiles = []
+
       options = args.last || {}
       signed_doc_file = options.delete(:signed_doc_file)
       signed_doc_xml = signed_doc_file.read if signed_doc_file
+      signed_doc_xml = Base64.encode64(signed_doc_xml) if signed_doc_xml && signed_doc_xml.starts_with?('PK')
 
       response = savon_client.call('StartSession') do |locals|
         locals.message 'bHoldSession' => true, 'SigDocXML' => signed_doc_xml
@@ -105,12 +106,20 @@ module Digidoc
     # Creates DigiDoc container
     def create_signed_doc(*args)
       options = args.last || {}
+      format = options.delete(:format) || :bdoc # vaikimisi bdoc
+
+      if format == :xml
+        version = '1.3'
+        format = 'DIGIDOC-XML'
+      elsif format == :bdoc
+        version = '2.1'
+        format = 'BDOC'
+      end
 
       session_code = options.delete(:session_code) || self.session_code
-      version = options.delete(:version) || '1.3'
 
       response = savon_client.call('CreateSignedDoc') do |locals|
-        locals.message 'Sesscode' => session_code, 'Format' => 'DIGIDOC-XML', 'Version' => version
+        locals.message 'Sesscode' => session_code, 'Format' => format, 'Version' => version
       end
 
       result = soap_fault?(response) ? response.to_hash[:fault] : response.to_hash[:create_signed_doc_response]
@@ -246,8 +255,7 @@ module Digidoc
         result = respond_with_hash_or_nested(response.to_hash[:fault])
       else
         escaped = Crack::XML.parse(response.http.body).to_hash['SOAP_ENV:Envelope']['SOAP_ENV:Body']['dig:GetSignedDocResponse']['SignedDocData']
-        # TODO: is escaping needed? - it removes original escaped & form XML
-        digidoc_container = escaped#CGI.unescapeHTML(escaped)
+        digidoc_container = escaped
 
         if embedded_datafiles.present?
           xmldata = Nokogiri::XML(digidoc_container)
@@ -255,8 +263,10 @@ module Digidoc
           digidoc_container = xmldata.to_xml
         end
 
+        format = digidoc_container.starts_with?('<?xml') ? :xml : :bdoc
+
         if block_given?
-          yield digidoc_container
+          yield(digidoc_container, format)
         else
           digidoc_container
         end
@@ -322,7 +332,7 @@ module Digidoc
         open_timeout: 10,
         ssl_version: :TLSv1,
         ssl_verify_mode: :none,
-        logger: Client.logger,
+        logger: self.logger,
         log_level: :debug,
         log: true
       )

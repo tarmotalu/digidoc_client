@@ -20,22 +20,32 @@ Add gem dependency in your `Gemfile` and install the gem:
 ### Signing
 
     client = Digidoc::Client.new
+    client.logger = Logger.new('digidoc_service.log')
     client.start_session
-    client.create_signed_doc 
+    client.create_signed_doc
     client.signed_doc_info
-    
+
     file1 = File.open('file1.pdf')
     client.add_datafile(file1)
     file2 = File.open('file2.pdf')
     client.add_datafile(file2)
-    
-    client.mobile_sign(:phone => '5012345', :role => ' My Company LLC / CTO')
+
+    client.mobile_sign(:phone => '+37260000007', :role => ' My Company LLC / CTO')
     client.sign_status
-    
-    client.save_signed_doc do |content|
-      File.open('signed_document.ddoc', 'w') { |f| f.write(content) }
+
+    #
+
+    client.save_signed_doc do |content, format|
+      File.open("signed_document.#{format}", 'w') do |f|
+        if format == :bdoc
+          f.binmode
+          f.write(Base64.decode64(content))
+        else
+          f.write(content)
+        end
+      end
     end
-    
+
     client.close_session
 
 ### More test numbers and details

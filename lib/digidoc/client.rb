@@ -59,7 +59,7 @@ module Digidoc
         locals.message 'CountryCode' => country_code, 'PhoneNo' => phone, 'Language' => language, 'ServiceName' => service_name,
           'MessageToDisplay' => message_to_display, 'SPChallenge' => sp_challenge, 'MessagingMode' => messaging_mode,
           'AsyncConfiguration' => async_configuration, 'ReturnCertData' => return_cert_data,
-          'ReturnRevocationData' => return_revocation_data, 'IdCode' => personal_code
+          'ReturnRevocationData' => return_revocation_data, 'IDCode' => personal_code
       end
 
       if soap_fault?(response)
